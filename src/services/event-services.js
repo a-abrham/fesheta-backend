@@ -1,0 +1,46 @@
+const db = require('../config/dbconfig')
+
+exports.getAllEvents = async () => {
+    try {
+        const results = await db.query('SELECT * FROM events')
+        return results
+    } catch (error) {
+        console.error('Error fetching events:', error)
+        throw error
+    }
+}
+
+exports.addEvent = async (eventData) => {
+    const { title, description, date, venue, organizer_id } = eventData
+    try {
+        const results = await db.query('INSERT INTO events (title, description, date, venue, organizer_id) VALUES (?, ?, ?, ?, ?)', [title, description, date, venue, organizer_id])
+        console.log('Event added successfully:', results)
+        return results
+    } catch (error) {
+        console.error('Error adding event:', error)
+        throw error
+    }
+}
+
+exports.updateEvent = async (eventId, eventData) => {
+    const { title, description, date, venue, organizer_id } = eventData
+    try {
+        const results = await db.query('UPDATE events SET title=?, description=?, date=?, venue=?, organizer_id=? WHERE event_id=?', [title, description, date, venue, organizer_id, eventId])
+        console.log('Event updated successfully:', results)
+        return results
+    } catch (error) {
+        console.error('Error updating event:', error)
+        throw error
+    }
+}
+
+exports.deleteEvent = async (eventId) => {
+    try {
+        const results = await db.query('DELETE FROM events WHERE event_id=?', [eventId])
+        console.log('Event deleted successfully:', results)
+        return results
+    } catch (error) {
+        console.error('Error deleting event:', error)
+        throw error
+    }
+}
