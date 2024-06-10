@@ -29,6 +29,9 @@ CREATE TABLE tickets (
     ticket_id INT AUTO_INCREMENT PRIMARY KEY,
     event_id INT NOT NULL,
     ticket_type_id INT NOT NULL,
+    attendee_name VARCHAR(100),
+    attendee_email VARCHAR(255),
+    attendee_phone VARCHAR(20),
     purchase_date DATETIME NOT NULL,
     FOREIGN KEY (event_id) REFERENCES events(event_id)
         ON DELETE CASCADE,

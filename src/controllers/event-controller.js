@@ -36,3 +36,16 @@ exports.deleteEvent = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to delete event', error: error.message })
     }
 }
+
+exports.createTicketType = async (req, res) => {
+    try {
+        const result = await eventService.createTicketType(req.body)
+        if(result.success){
+            res.json({ success: true, message: 'ticket type added successfully'});
+        }else{
+            res.json({success: false, message: 'Failed to add ticket type', error: error.message})
+        }
+    } catch (error) {
+        
+    }
+}

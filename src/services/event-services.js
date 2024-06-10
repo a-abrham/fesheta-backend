@@ -44,3 +44,19 @@ exports.deleteEvent = async (eventId) => {
         throw error
     }
 }
+
+exports.createTicketType = async (typeData) => {
+    const {eventId, typeName, price} = typeData
+    try {
+        const query = `
+            INSERT INTO ticket_types (event_id, ticket_type_name, price)
+            VALUES (?, ?, ?)
+        `
+        const result = await db.query(query, [eventId, typeName, price]) 
+        return {success: true}
+
+    } catch (error) {
+        console.error('Error creating ticket type:', error)
+        throw error
+    }
+}
