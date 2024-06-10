@@ -14,7 +14,7 @@ exports.addEvent = async (eventData) => {
     const { title, description, date, venue, organizer_id } = eventData
     try {
         const results = await db.query('INSERT INTO events (title, description, date, venue, organizer_id) VALUES (?, ?, ?, ?, ?)', [title, description, date, venue, organizer_id])
-        console.log('Event added successfully:', results)
+        console.log('Event added successfully')
         return results
     } catch (error) {
         console.error('Error adding event:', error)
@@ -22,11 +22,11 @@ exports.addEvent = async (eventData) => {
     }
 }
 
-exports.updateEvent = async (eventId, eventData) => {
-    const { title, description, date, venue, organizer_id } = eventData
+exports.updateEvent = async (eventData) => {
+    const { title, description, date, venue, organizer_id, event_id} = eventData
     try {
-        const results = await db.query('UPDATE events SET title=?, description=?, date=?, venue=?, organizer_id=? WHERE event_id=?', [title, description, date, venue, organizer_id, eventId])
-        console.log('Event updated successfully:', results)
+        const results = await db.query('UPDATE events SET title=?, description=?, date=?, venue=?, organizer_id=? WHERE event_id=?', [title, description, date, venue, organizer_id, event_id])
+        console.log('Event updated successfully')
         return results
     } catch (error) {
         console.error('Error updating event:', error)
@@ -37,7 +37,7 @@ exports.updateEvent = async (eventId, eventData) => {
 exports.deleteEvent = async (eventId) => {
     try {
         const results = await db.query('DELETE FROM events WHERE event_id=?', [eventId])
-        console.log('Event deleted successfully:', results)
+        console.log('Event deleted successfully')
         return results
     } catch (error) {
         console.error('Error deleting event:', error)
