@@ -1,4 +1,5 @@
 const organizerService = require('../services/organizer-services');
+const jwt = require('jsonwebtoken')
 
 exports.addOrganizer = async (req, res) => {
     try {
@@ -18,7 +19,22 @@ exports.authenticateOrganizer = async (req, res) => {
         const { identifier, password } = req.body;
         const authResult = await organizerService.authenticateOrganizer(identifier, password);
         if (authResult.success) {
-            res.json({success: true});
+            const organizer = authResult.organizer[0]
+            const realToken = jwt.sign({ organizer }, process.env.secretKey, {
+                expiresIn: "30d",
+              });
+        console.log(organizer)
+
+
+        res
+        .cookie("token", realToken, { httpOnly: true })
+        .cookie("id", organizer.username)
+
+      res.status(200).json({
+        success: true,
+        message: "Authentication successful",
+      });
+
         } else {
             res.status(401).json(authResult);
         }

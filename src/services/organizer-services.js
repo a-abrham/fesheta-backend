@@ -14,7 +14,6 @@ exports.addOrganizer = async (organizerData) => {
 }
 
 exports.authenticateOrganizer = async (identifier, password) => {
-    console.log(identifier, password)
     try {
         let organizer
         const isEmail = /\S+@\S+\.\S+/.test(identifier)
