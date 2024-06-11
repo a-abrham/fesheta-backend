@@ -33,6 +33,7 @@ CREATE TABLE tickets (
     attendee_email VARCHAR(255),
     attendee_phone VARCHAR(20),
     purchase_date DATETIME NOT NULL,
+    is_paid BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (event_id) REFERENCES events(event_id)
         ON DELETE CASCADE,
     FOREIGN KEY (ticket_type_id) REFERENCES ticket_types(ticket_type_id)

@@ -46,3 +46,19 @@ exports.verifyPayment = async (req, res) => {
 
     verifyPaymentRetry()
 }
+
+exports.createTicket = async (req, res) => {
+    try {
+        const result = await service.createTicket(req.body);
+        if (result.success) {
+            const result2 = await service.purchaseTicket(req.body.ticket_type_id, result.insertedId)
+            const name = result2.name
+            const price = result2.price
+            const ticket_id = result.insertedId
+        }
+        res.status(201).json({ success: true, message: "Ticket created successfully" });
+    } catch (error) {
+        console.error("Error creating ticket:", error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};

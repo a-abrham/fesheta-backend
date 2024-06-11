@@ -3,18 +3,33 @@ const axios = require("axios").default
 
 
 exports.createTicket = async (ticketData) => {
-        const {eventId, ticketTypeId, purchaseDate, attendeeName, attendeeEmail, attendeePhone} = ticketData
+        const {eventId, ticket_type_id, attendeeName} = ticketData
         try {
-            await db.query(`
-            INSERT INTO tickets (event_id, ticket_type_id, purchase_date, attendee_name, attendee_email, attendee_phone)
-            VALUES (?, ?, ?, ?, ?, ?)`, [eventId, ticketTypeId, purchaseDate, attendeeName, attendeeEmail, attendeePhone])
-            return {success: true}
+            const result = await db.query(`
+            INSERT INTO tickets (event_id, ticket_type_id, attendee_name)
+            VALUES (?, ?, ?)`, [eventId, ticket_type_id, attendeeName])
+            const insertedId = result[0].insertId
+            return {success: true, insertedId}
         } catch (error) {
             console.error('Error creating ticket:', error)
             throw error
         }
 }
 
+exports.purchaseTicket = async (ticket_type_id, ticket_id) => {
+    try {
+        let [price] = await db.query('SELECT price FROM ticket_types WHERE ticket_type_id = ?', [ticket_type_id]);
+        price = price[0].price
+
+        let [attendee] = await db.query('SELECT * FROM tickets WHERE ticket_id = ?', [ticket_id]);
+        const name = attendee[0].attendee_name
+
+        return {price, name}
+    } catch (error) {
+        console.error('Error purchasing ticket:', error);
+        throw error;
+    }
+};
    
 exports.deleteTicket = async (ticketId) => {
     try {
@@ -39,9 +54,7 @@ exports.initiatePayment = async (TEXT_REF, RETURN_URL) => {
         const data = {
             amount: '100',
             currency: 'ETB',
-            email: 'ato@ekele.com',
             first_name: 'Ato',
-            last_name: 'Ekele',
             tx_ref: TEXT_REF,
             return_url: RETURN_URL
         }
