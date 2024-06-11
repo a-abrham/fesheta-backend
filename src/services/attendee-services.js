@@ -26,31 +26,38 @@ exports.deleteTicket = async (ticketId) => {
     }
 }
 
+const config = {
+    headers: {
+        Authorization: `Bearer ${process.env.CHAPA_AUTH || "CHASECK_TEST-lqfq5yTuTQt1Wtj2gISJ4wmVs8jI220K"}`
+    }
+}
 
-exports.purchase = async() => {
+exports.initiatePayment = async (TEXT_REF, RETURN_URL) => {
     const CHAPA_URL = process.env.CHAPA_URL || "https://api.chapa.co/v1/transaction/initialize"
-    const CHAPA_AUTH = "CHASECK_TEST-lqfq5yTuTQt1Wtj2gISJ4wmVs8jI220K" 
 
-    const CALLBACK_URL = "http://localhost:4400/api/verify-payment/"
-    const RETURN_URL = "http://localhost:4400/api/payment-success/"
-
-    const TEXT_REF = "tx-feshta-" + Date.now()
-    const data = {
-            amount: '100', 
+    try {
+        const data = {
+            amount: '100',
             currency: 'ETB',
             email: 'ato@ekele.com',
             first_name: 'Ato',
             last_name: 'Ekele',
             tx_ref: TEXT_REF,
-            callback_url: CALLBACK_URL + TEXT_REF,
             return_url: RETURN_URL
         }
 
-        await axios.post(CHAPA_URL, data, config)
-            .then((response) => {
-                res.redirect(response.data.data.checkout_url)
-            })
-            .catch((err) => console.log(err))
+        const response = await axios.post(CHAPA_URL, data, config)
+        return response.data.data.checkout_url
+    } catch (error) {
+        throw new Error(error.message)
+    }
 }
 
-
+exports.verifyPayment = async (id) => {
+    try {
+        const response = await axios.get(`https://api.chapa.co/v1/transaction/verify/${id}`, config)
+        return true
+    } catch (error) {
+        throw new Error(error.message)
+    }
+}
