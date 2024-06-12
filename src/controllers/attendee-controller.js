@@ -52,7 +52,6 @@ const generateTicketData = async (ticket_id) => {
         checkIfUsed: checkIfUsed
     }
 
-    console.log(data)
     return data
 }
 
@@ -107,11 +106,9 @@ exports.createTicketWithoutPayment = async (req, res) => {
     }
 }
 
-
 exports.markTicketAsUsed = async (req, res) => {
     try {
         const { ticketId } = req.params
-        console.log(ticketId)
 
         const success = await service.markTicketAsUsed(ticketId)
 
