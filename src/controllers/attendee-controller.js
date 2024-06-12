@@ -2,35 +2,6 @@ const service = require('../services/attendee-services')
 
 const MAX_RETRIES = 5
 
-exports.verifyPayment = async (req, res) => {
-    let retries = 0
-    const ticket_id = req.query.ticket_id
-
-    const verifyPaymentRetry = async () => {
-        try {
-            const isVerified = await service.verifyPayment(req.params.id)
-            if (isVerified) {
-                console.log("Payment was successfully verified")
-                await service.ticketAsPaid(ticket_id)
-                res.status(200).json({ message: "Payment was successfully verified" })
-            } else {
-                console.error("Payment verification failed")
-                res.status(400).json({ error: "Payment verification failed" })
-            }
-        } catch (error) {
-            console.error("Error verifying payment:", error.message)
-            retries++
-            if (retries < MAX_RETRIES) {
-                setTimeout(verifyPaymentRetry, 2000)
-            } else {
-                res.status(500).json({ error: "Error verifying payment" })
-            }
-        }
-    }
-
-    verifyPaymentRetry()
-}
-
 exports.createTicketAndPay = async (req, res) => {
     try {
         const result = await service.createTicket(req.body)
@@ -70,20 +41,62 @@ exports.createTicketAndPay = async (req, res) => {
     }
 }
 
+
+const generateTicketData = async (ticket_id) => {
+    let data = await service.getTicketDetails(ticket_id)
+    const markAsUsedurl = `http://localhost:3005/markTicketAsUsed/${ticket_id}`
+    const checkIfUsed = `http://localhost:3005/checkticket/${ticket_id}`
+    data = {
+        data: data,
+        markAsUsedurl: markAsUsedurl,
+        checkIfUsed: checkIfUsed
+    }
+
+    console.log(data)
+    return data
+}
+
+exports.verifyPayment = async (req, res) => {
+    let retries = 0
+    const ticket_id = req.query.ticket_id
+
+    const verifyPaymentRetry = async () => {
+        try {
+            const isVerified = await service.verifyPayment(req.params.id)
+            if (isVerified) {
+                console.log("Payment was successfully verified")
+                await service.ticketAsPaid(ticket_id)
+                
+                const data = await generateTicketData(ticket_id)
+
+                const qrcode = await service.createQrCode(JSON.stringify(data))
+                res.status(200).json({ message: "Payment was successfully verified", qrcode: qrcode})
+            } else {
+                console.error("Payment verification failed")
+                res.status(400).json({ error: "Payment verification failed" })
+            }
+        } catch (error) {
+            console.error("Error verifying payment:", error.message)
+            retries++
+            if (retries < MAX_RETRIES) {
+                setTimeout(verifyPaymentRetry, 2000)
+            } else {
+                res.status(500).json({ error: "Error verifying payment" })
+            }
+        }
+    }
+
+    verifyPaymentRetry()
+}
+
 exports.createTicketWithoutPayment = async (req, res) => {
     try {
         const result = await service.createTicket(req.body)
         if(result.success){
-            let data = await service.getTicketDetails(result.insertedId)
-            const url = `http://localhost:3005/markTicketAsUsed/${result.insertedId}`
-
-            data = {
-                data: data,
-                url: url
-            }
+            const ticket_id = result.insertedId
+            const data = await generateTicketData(ticket_id)
 
             const qrcode = await service.createQrCode(JSON.stringify(data))
-
             res.status(201).json({ message: "ticket created", qrcode: qrcode}) 
         }else {
             res.status(500).json({ success: false, error: "Failed to create ticket" })
@@ -94,3 +107,32 @@ exports.createTicketWithoutPayment = async (req, res) => {
     }
 }
 
+
+exports.markTicketAsUsed = async (req, res) => {
+    try {
+        const { ticketId } = req.params
+        console.log(ticketId)
+
+        const success = await service.markTicketAsUsed(ticketId)
+
+        if (success) {
+            res.json({ success: true, message: 'Ticket marked as used' })
+        } else {
+            res.status(404).json({ success: false, message: 'Ticket not found' })
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: "Internal Server Error" })
+    }
+}
+
+exports.checkTicketIsUsed = async (req, res, next) => {
+    try {
+        const { ticketId } = req.params
+
+        const isUsed = await service.isTicketUsed(ticketId)
+
+        res.json({ isUsed })
+    } catch (error) {
+        res.status(500).json({ success: false, error: "Internal Server Error" })
+    }
+}

@@ -145,3 +145,37 @@ exports.createQrCode = async (data) => {
         throw new Error(error.message)
     }
 }
+
+exports.markTicketAsUsed = async (ticketId) => {
+    try {
+        const [result] = await db.query(
+            'UPDATE tickets SET is_used = 1 WHERE ticket_id = ?',
+            [ticketId]
+        )
+
+        if (result.affectedRows > 0) {
+            return true
+        } else {
+            return false
+        }
+    } catch (error) {
+        throw new Error(error.message)
+    }
+}
+
+exports.isTicketUsed = async (ticketId) => {
+    try {
+        const [result] = await db.query(
+            'SELECT is_used FROM tickets WHERE ticket_id = ?',
+            [ticketId]
+        )
+
+        if (result.length > 0) {
+            return result[0].is_used === 1
+        } else {
+            return false
+        }
+    } catch (error) {
+        throw new Error(error.message)
+    }
+}
