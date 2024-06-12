@@ -36,3 +36,20 @@ exports.authenticateOrganizer = async (identifier, password) => {
         throw new Error('Authentication failed')
     }
 }
+
+
+exports.getSalesDetails = async (eventId) => {
+    try {
+        const [sales] = await db.query(
+            `SELECT ts.sale_id, ts.event_id, ts.ticket_type_id, tt.ticket_type_name, ts.quantity_sold, ts.total_amount_sold
+            FROM ticket_sales ts
+            INNER JOIN ticket_types tt ON ts.ticket_type_id = tt.ticket_type_id
+            WHERE ts.event_id = ?`,
+            [eventId]
+        )
+
+        return sales
+    } catch (error) {
+        throw new Error(error.message)
+    }
+}

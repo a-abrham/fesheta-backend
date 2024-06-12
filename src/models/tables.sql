@@ -48,3 +48,13 @@ CREATE TABLE feedback (
     FOREIGN KEY (event_id) REFERENCES events(event_id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE ticket_sales (
+    sale_id INT AUTO_INCREMENT PRIMARY KEY,
+    event_id INT,
+    ticket_type_id INT,
+    quantity_sold INT DEFAULT 0,
+    total_amount_sold DECIMAL(10, 2) DEFAULT 0.00,
+    FOREIGN KEY (event_id) REFERENCES events(event_id),
+    FOREIGN KEY (ticket_type_id) REFERENCES ticket_types(ticket_type_id)
+);
