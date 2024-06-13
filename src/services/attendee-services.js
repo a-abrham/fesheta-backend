@@ -43,12 +43,12 @@ exports.deleteTicket = async (ticketId) => {
 
 const config = {
     headers: {
-        Authorization: `Bearer ${process.env.CHAPA_AUTH || "CHASECK_TEST-lqfq5yTuTQt1Wtj2gISJ4wmVs8jI220K"}`
+        Authorization: `Bearer ${process.env.CHAPA_AUTH}`
     }
 }
 
 exports.initiatePayment = async (TEXT_REF, RETURN_URL, name, price) => {
-    const CHAPA_URL = process.env.CHAPA_URL || "https://api.chapa.co/v1/transaction/initialize"
+    const CHAPA_URL = process.env.CHAPA_URL
 
     try {
         const data = {
