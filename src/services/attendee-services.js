@@ -1,7 +1,6 @@
 const db = require('../config/dbconfig')
 const axios = require("axios").default
 const qr = require('qr-image')
-const cron = require('node-cron');
 
 const transporter = require('../config/mailerconfig')
 
@@ -11,15 +10,15 @@ const sendEmail = async (to, subject, text) => {
         to,
         subject,
         text
-    };
+    }
 
     try {
-        await transporter.sendMail(mailOptions);
-        console.log('Reminder email sent successfully');
+        await transporter.sendMail(mailOptions)
+        console.log('Reminder email sent successfully')
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('Error sending email:', error)
     }
-};
+}
 
 exports.createTicket = async (ticketData) => {
         const {eventId, ticket_type_id, attendee_name, attendee_email} = ticketData
@@ -127,23 +126,32 @@ exports.scheduleReminderEmail = async (ticket_id) => {
 
         attendee_email = attendee_email[0].attendee_email
 
-        console.log(eventDate, attendee_email)
+        const reminderDate = new Date(eventDate)
+        reminderDate.setDate(reminderDate.getDate() - 2)
 
+        const [existingReminder] = await db.query(
+            'SELECT reminder_id, ticket_ids, emails FROM reminders WHERE event_id = ?',
+            [eventId]
+        )
 
-        const reminderDate = new Date(eventDate);
-        reminderDate.setDate(reminderDate.getDate() - 2);
+        if (existingReminder.length > 0) {
+            const reminder = existingReminder[0]
+            const ticketIds = reminder.ticket_ids
+            const emails = reminder.emails
 
-        console.log(reminderDate)
+            ticketIds.push(ticket_id)
+            emails.push(attendee_email)
 
-        // cron.schedule(reminderDate, () => {
-        //     sendEmail(
-        //         attendee_email,
-        //         'Event Reminder',
-        //         `This is a reminder for your event on ${eventDate}.`
-        //     );
-        // });
-
-        console.log(`Scheduled reminder email for ticket ID: ${ticket_id} for event on ${eventDate} (reminder on ${reminderDate})`);
+            await db.query(
+                'UPDATE reminders SET ticket_ids = ?, emails = ? WHERE reminder_id = ?',
+                [JSON.stringify(ticketIds), JSON.stringify(emails), reminder.reminder_id]
+            )
+        } else {
+            await db.query(
+                'INSERT INTO reminders (event_id, ticket_ids, emails, send_date) VALUES (?, ?, ?, ?)',
+                [eventId, JSON.stringify([ticket_id]), JSON.stringify([attendee_email]), reminderDate]
+            )
+        }
 
     } catch (error) {
         console.error(`Failed to schedule reminder email: ${error.message}`)

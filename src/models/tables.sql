@@ -58,3 +58,12 @@ CREATE TABLE ticket_sales (
     FOREIGN KEY (event_id) REFERENCES events(event_id),
     FOREIGN KEY (ticket_type_id) REFERENCES ticket_types(ticket_type_id)
 );
+
+CREATE TABLE reminders (
+    reminder_id INT AUTO_INCREMENT PRIMARY KEY,
+    event_id INT NOT NULL,
+    ticket_ids JSON NOT NULL,
+    emails JSON NOT NULL,
+    send_date DATETIME NOT NULL,
+    FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE
+);
