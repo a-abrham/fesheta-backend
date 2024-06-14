@@ -132,26 +132,24 @@ exports.scheduleReminderEmail = async (ticket_id) => {
         reminderDate.setDate(reminderDate.getDate() - 2)
 
         const [existingReminder] = await db.query(
-            'SELECT reminder_id, ticket_ids, emails FROM reminders WHERE event_id = ?',
+            'SELECT reminder_id, emails FROM reminders WHERE event_id = ?',
             [eventId]
         )
 
         if (existingReminder.length > 0) {
             const reminder = existingReminder[0]
-            const ticketIds = reminder.ticket_ids
             const emails = reminder.emails
 
-            ticketIds.push(ticket_id)
             emails.push(attendee_email)
 
             await db.query(
-                'UPDATE reminders SET ticket_ids = ?, emails = ? WHERE reminder_id = ?',
-                [JSON.stringify(ticketIds), JSON.stringify(emails), reminder.reminder_id]
+                'UPDATE reminders SET emails = ? WHERE reminder_id = ?',
+                [JSON.stringify(emails), reminder.reminder_id]
             )
         } else {
             await db.query(
-                'INSERT INTO reminders (event_id, ticket_ids, emails, send_date) VALUES (?, ?, ?, ?)',
-                [eventId, JSON.stringify([ticket_id]), JSON.stringify([attendee_email]), reminderDate]
+                'INSERT INTO reminders (event_id, emails, send_date) VALUES (?, ?, ?, ?)',
+                [eventId, JSON.stringify([attendee_email]), reminderDate]
             )
         }
 
@@ -294,9 +292,29 @@ exports.sendReminderEmails = async (reminder_id) => {
         let emails = reminder[0].emails
 
         for (const email of emails) {
-            const subject = 'Your Event Reminder'
-            const text = 'This is a reminder for your upcoming event. Please be there on time!'
-
+            const [rows] = await db.query(`
+            SELECT t.attendee_name, e.title as event_title, e.date as event_date, e.venue as event_venue
+            FROM tickets t
+            INNER JOIN events e ON t.event_id = e.event_id
+            WHERE t.attendee_email = ?
+            `, [email]);
+        
+        if (rows.length > 0) {
+            const attendeeName = rows[0].attendee_name;
+            const eventTitle = rows[0].event_title;
+            const eventDate = rows[0].event_date.toLocaleString(); // Format date as per your requirements
+            const eventVenue = rows[0].event_venue;
+        
+            const subject = 'Your Event Reminder';
+            const text = `Hi ${attendeeName},\n\n` +
+                         `This is a reminder for your upcoming event:\n\n` +
+                         `Event: ${eventTitle}\n` +
+                         `Date: ${eventDate}\n` +
+                         `Venue: ${eventVenue}\n\n` +
+                         `Please be there on time!\n\n` +
+                         `Best regards,\n` +
+                         `Event Management Team`;
+        
             const is_sent = await sendEmail(email, subject, text)
             if(is_sent){
                 console.log(email)
@@ -305,6 +323,7 @@ exports.sendReminderEmails = async (reminder_id) => {
                 console.log('not sent', email)
             }
         }
+    }
 
         await db.query(
             'UPDATE reminders SET emails = ? WHERE reminder_id = ?',
