@@ -297,15 +297,15 @@ exports.sendReminderEmails = async (reminder_id) => {
             FROM tickets t
             INNER JOIN events e ON t.event_id = e.event_id
             WHERE t.attendee_email = ?
-            `, [email]);
+            `, [email])
         
         if (rows.length > 0) {
-            const attendeeName = rows[0].attendee_name;
-            const eventTitle = rows[0].event_title;
-            const eventDate = rows[0].event_date.toLocaleString(); // Format date as per your requirements
-            const eventVenue = rows[0].event_venue;
+            const attendeeName = rows[0].attendee_name
+            const eventTitle = rows[0].event_title
+            const eventDate = rows[0].event_date.toLocaleString()
+            const eventVenue = rows[0].event_venue
         
-            const subject = 'Your Event Reminder';
+            const subject = 'Your Event Reminder'
             const text = `Hi ${attendeeName},\n\n` +
                          `This is a reminder for your upcoming event:\n\n` +
                          `Event: ${eventTitle}\n` +
@@ -313,7 +313,7 @@ exports.sendReminderEmails = async (reminder_id) => {
                          `Venue: ${eventVenue}\n\n` +
                          `Please be there on time!\n\n` +
                          `Best regards,\n` +
-                         `Event Management Team`;
+                         `Event Management Team`
         
             const is_sent = await sendEmail(email, subject, text)
             if(is_sent){
