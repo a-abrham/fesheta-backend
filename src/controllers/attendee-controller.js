@@ -96,6 +96,8 @@ exports.createTicketWithoutPayment = async (req, res) => {
             const data = await generateTicketData(ticket_id)
 
             const qrcode = await service.createQrCode(JSON.stringify(data))
+
+            await service.scheduleReminderEmail(ticket_id)
             res.status(201).json({ message: "ticket created", qrcode: qrcode}) 
         }else {
             res.status(500).json({ success: false, error: "Failed to create ticket" })

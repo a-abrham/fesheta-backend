@@ -1,13 +1,32 @@
 const db = require('../config/dbconfig')
 const axios = require("axios").default
 const qr = require('qr-image')
+const cron = require('node-cron');
+
+const transporter = require('../config/mailerconfig')
+
+const sendEmail = async (to, subject, text) => {
+    const mailOptions = {
+        from: 'websiteemsa@gmail.com',
+        to,
+        subject,
+        text
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('Reminder email sent successfully');
+    } catch (error) {
+        console.error('Error sending email:', error);
+    }
+};
 
 exports.createTicket = async (ticketData) => {
-        const {eventId, ticket_type_id, attendeeName} = ticketData
+        const {eventId, ticket_type_id, attendee_name, attendee_email} = ticketData
         try {
             const result = await db.query(`
-            INSERT INTO tickets (event_id, ticket_type_id, attendee_name)
-            VALUES (?, ?, ?)`, [eventId, ticket_type_id, attendeeName])
+            INSERT INTO tickets (event_id, ticket_type_id, attendee_name, attendee_email)
+            VALUES (?, ?, ?, ?)`, [eventId, ticket_type_id, attendee_name, attendee_email])
             const insertedId = result[0].insertId
             return {success: true, insertedId}
         } catch (error) {
@@ -75,6 +94,63 @@ exports.verifyPayment = async (id) => {
     }
 }
 
+
+exports.scheduleReminderEmail = async (ticket_id) => {
+    try {
+        const [ticket] = await db.query(
+            'SELECT event_id FROM tickets WHERE ticket_id = ?',
+            [ticket_id]
+        )
+
+        if (ticket.length === 0) {
+            throw new Error(`Ticket with ID ${ticket_id} not found`)
+        }
+
+        const eventId = ticket[0].event_id
+
+        const [event] = await db.query(
+            'SELECT date FROM events WHERE event_id = ?',
+            [eventId]
+        )
+
+        if (event.length === 0) {
+            throw new Error(`Event with ID ${eventId} not found`)
+        }
+
+        const eventDate = event[0].date
+
+        let [attendee_email] = await db.query('SELECT attendee_email FROM tickets WHERE ticket_id = ?', [ticket_id])
+        
+        if(attendee_email.length === 0){
+            throw new Error(`Email with Ticket ID ${ticket_id} not found`)
+        }
+
+        attendee_email = attendee_email[0].attendee_email
+
+        console.log(eventDate, attendee_email)
+
+
+        const reminderDate = new Date(eventDate);
+        reminderDate.setDate(reminderDate.getDate() - 2);
+
+        console.log(reminderDate)
+
+        // cron.schedule(reminderDate, () => {
+        //     sendEmail(
+        //         attendee_email,
+        //         'Event Reminder',
+        //         `This is a reminder for your event on ${eventDate}.`
+        //     );
+        // });
+
+        console.log(`Scheduled reminder email for ticket ID: ${ticket_id} for event on ${eventDate} (reminder on ${reminderDate})`);
+
+    } catch (error) {
+        console.error(`Failed to schedule reminder email: ${error.message}`)
+        throw error
+    }
+}
+
 exports.ticketAsPaid = async (id) => {
     try{
         const [result] = await db.query(
@@ -103,6 +179,9 @@ exports.ticketAsPaid = async (id) => {
                 [ticket[0].ticket_type_id, ticket[0].event_id, ticket[0].ticket_type_id]
             )
         }
+
+        await scheduleReminderEmail(id)
+
         return true
     }catch(error){
         throw new Error(error.message)
