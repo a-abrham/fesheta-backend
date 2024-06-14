@@ -12,4 +12,8 @@ router.post("/createTicketWOpayment", attendeeController.createTicketWithoutPaym
 router.get("/markTicketAsUsed/:ticketId", attendeeController.markTicketAsUsed)
 router.get("/checkticket/:ticketId", attendeeController.checkTicketIsUsed)
 
+
+router.get("/reminders", attendeeController.getAllReminders)
+router.get("/send-reminder/:reminder_id", attendeeController.sendReminderEmails)
+
 module.exports = router

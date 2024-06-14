@@ -124,13 +124,35 @@ exports.markTicketAsUsed = async (req, res) => {
     }
 }
 
-exports.checkTicketIsUsed = async (req, res, next) => {
+exports.checkTicketIsUsed = async (req, res) => {
     try {
         const { ticketId } = req.params
 
         const isUsed = await service.isTicketUsed(ticketId)
 
-        res.json({ isUsed })
+        res.json(isUsed)
+    } catch (error) {
+        res.status(500).json({ success: false, error: "Internal Server Error" })
+    }
+}
+
+exports.getAllReminders = async (req, res) => {
+    try {
+        const reminders = await service.getAllReminders()
+
+        res.json(reminders)
+    }catch (error){
+        res.status(500).json({ success: false, error: "Internal Server Error" })
+    }
+}
+
+exports.sendReminderEmails = async (req, res) => {
+    try {
+        const { reminder_id } = req.params
+
+        await service.sendReminderEmails(reminder_id)
+        res.json({ success: true, message: 'reminder sent' })
+
     } catch (error) {
         res.status(500).json({ success: false, error: "Internal Server Error" })
     }

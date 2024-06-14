@@ -15,8 +15,10 @@ const sendEmail = async (to, subject, text) => {
     try {
         await transporter.sendMail(mailOptions)
         console.log('Reminder email sent successfully')
+        return true
     } catch (error) {
         console.error('Error sending email:', error)
+        return false
     }
 }
 
@@ -264,5 +266,53 @@ exports.isTicketUsed = async (ticketId) => {
         }
     } catch (error) {
         throw new Error(error.message)
+    }
+}
+
+exports.getAllReminders = async () => {
+    try {
+        const [reminders] = await db.query('SELECT * FROM reminders')
+
+        return reminders
+    } catch (error) {
+        console.error(`Error retrieving reminders: ${error.message}`)
+        throw error
+    }
+}
+
+
+
+
+exports.sendReminderEmails = async (reminder_id) => {
+    try {
+        const [reminder] = await db.query('SELECT emails FROM reminders WHERE reminder_id = ?', [reminder_id])
+
+        if (!reminder || reminder.length === 0) {
+            throw new Error(`Reminder with ID ${reminder_id} not found`)
+        }
+
+        let emails = reminder[0].emails
+
+        for (const email of emails) {
+            const subject = 'Your Event Reminder'
+            const text = 'This is a reminder for your upcoming event. Please be there on time!'
+
+            const is_sent = await sendEmail(email, subject, text)
+            if(is_sent){
+                console.log(email)
+                emails = emails.filter(e => e !== email)
+            }else{
+                console.log('not sent', email)
+            }
+        }
+
+        await db.query(
+            'UPDATE reminders SET emails = ? WHERE reminder_id = ?',
+            [JSON.stringify(emails), reminder_id]
+        )
+
+    } catch (error) {
+        console.error(`Failed to send reminder emails: ${error.message}`)
+        throw error
     }
 }
