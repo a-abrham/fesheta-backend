@@ -316,8 +316,8 @@ exports.sendReminderEmails = async (reminder_id) => {
                          `Event Management Team`
         
             const is_sent = await sendEmail(email, subject, text)
+
             if(is_sent){
-                console.log(email)
                 emails = emails.filter(e => e !== email)
             }else{
                 console.log('not sent', email)

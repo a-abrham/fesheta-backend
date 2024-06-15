@@ -17,7 +17,7 @@ exports.createTicketAndPay = async (req, res) => {
             const initiatePaymentRetry = async () => {
                 try {
                     const TEXT_REF = "tx-myecommerce12345-" + Date.now()
-                    const RETURN_URL = `http://localhost:3005/api/verify-payment/${TEXT_REF}?ticket_id=${ticket_id}`
+                    const RETURN_URL = `http://localhost:3005/verify-payment/${TEXT_REF}?ticket_id=${ticket_id}`
                     const checkout_url = await service.initiatePayment(TEXT_REF, RETURN_URL, name, price)
                     res.send(checkout_url)
                 } catch (error) {
