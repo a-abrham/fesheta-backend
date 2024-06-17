@@ -233,34 +233,63 @@ exports.createQrCode = async (data) => {
     }
 }
 
+
 exports.markTicketAsUsed = async (ticketId) => {
     try {
-        const [result] = await db.query(
+        const [dateResult] = await db.query(
+            `SELECT e.date
+             FROM tickets t
+             JOIN events e ON t.event_id = e.event_id
+             WHERE t.ticket_id = ?`,
+            [ticketId]
+        )
+
+        if (dateResult.length === 0) {
+            throw new Error('Ticket not found')
+        }
+
+        const eventDate = new Date(dateResult[0].date)
+        const currentDate = new Date()
+
+        const eventYear = eventDate.getUTCFullYear()
+        const eventMonth = eventDate.getUTCMonth()
+        const eventDay = eventDate.getUTCDate()
+
+        const currentYear = currentDate.getUTCFullYear()
+        const currentMonth = currentDate.getUTCMonth()
+        const currentDay = currentDate.getUTCDate()
+
+        if (eventYear !== currentYear || eventMonth !== currentMonth || eventDay !== currentDay) {
+            return false
+        }
+
+        const [updateResult] = await db.query(
             'UPDATE tickets SET is_used = 1 WHERE ticket_id = ?',
             [ticketId]
         )
 
-        if (result.affectedRows > 0) {
-            return true
-        } else {
-            return false
-        }
+        return updateResult.affectedRows > 0
     } catch (error) {
         throw new Error(error.message)
     }
 }
 
-exports.isTicketUsed = async (ticketId) => {
+
+exports.checkTicket = async (ticketId) => {
     try {
         const [result] = await db.query(
             'SELECT is_used FROM tickets WHERE ticket_id = ?',
             [ticketId]
         )
 
-        if (result.length > 0) {
-            return result[0].is_used === 1
-        } else {
+        if (result.length === 0) {
             return false
+        } else {
+            if(!(result[0].is_used)){
+                return true
+            }else{
+                return false
+            }
         }
     } catch (error) {
         throw new Error(error.message)

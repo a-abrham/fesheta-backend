@@ -124,11 +124,11 @@ exports.markTicketAsUsed = async (req, res) => {
     }
 }
 
-exports.checkTicketIsUsed = async (req, res) => {
+exports.checkTicket = async (req, res) => {
     try {
         const { ticketId } = req.params
 
-        const isUsed = await service.isTicketUsed(ticketId)
+        const isUsed = await service.checkTicket(ticketId)
 
         res.json(isUsed)
     } catch (error) {

@@ -10,7 +10,7 @@ router.post("/createTicketWOpayment", attendeeController.createTicketWithoutPaym
 
 
 router.get("/markTicketAsUsed/:ticketId", attendeeController.markTicketAsUsed)
-router.get("/checkticket/:ticketId", attendeeController.checkTicketIsUsed)
+router.get("/checkticket/:ticketId", attendeeController.checkTicket)
 
 
 router.get("/reminders", attendeeController.getAllReminders)
